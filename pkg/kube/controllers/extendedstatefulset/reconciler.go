@@ -18,12 +18,20 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/wait"
 	podUtils "k8s.io/kubernetes/pkg/api/v1/pod"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	essv1a1 "code.cloudfoundry.org/cf-operator/pkg/kube/apis/extendedstatefulset/v1alpha1"
+)
+
+const (
+	// Poll interval for StatefulSet tests
+	StatefulSetPoll = 10 * time.Second
+	// Timeout interval for StatefulSet operations
+	StatefulSetTimeout = 10 * time.Minute
 )
 
 // Check that ReconcileExtendedStatefulSet implements the reconcile.Reconciler interface
@@ -443,12 +451,16 @@ func (r *ReconcileExtendedStatefulSet) updateStatefulSetsConfigSHA1(ctx context.
 			if err != nil {
 				return errors.Wrapf(err, "Update StatefulSet config sha1")
 			}
-			// TODO restart all pods ot the StatefulSet
+
+			r.log.Debug("Restarting all pods for StatefulSet '", statefulSet.Name, "'.")
+			err = r.restartPods(ctx, &statefulSet)
+			if err != nil {
+				return errors.Wrapf(err, "Update StatefulSet config sha1")
+			}
 		}
 	}
 
 	return nil
-
 }
 
 // listConfigsFromSpec returns a list of all Secrets and ConfigMaps that are
@@ -483,7 +495,6 @@ func (r *ReconcileExtendedStatefulSet) listConfigsFromSpec(statefulSet *v1beta1.
 		}
 	}
 
-	r.log.Debug(configs)
 	return configs, nil
 }
 
@@ -683,7 +694,7 @@ func (r *ReconcileExtendedStatefulSet) removeOwnerReferences(obj *v1beta1.Statef
 		// Compare the ownerRefs and update if they have changed
 		if !reflect.DeepEqual(ownerRefs, child.GetOwnerReferences()) {
 			child.SetOwnerReferences(ownerRefs)
-			r.log.Debug("Removing child '", child.GetName(), "' from StatefulSet '", obj.Name, "' in namespace '", obj.Namespace, "'.")
+			r.log.Debug("Removing child '", child.GetObjectKind().GroupVersionKind().Kind, "/", child.GetName(), "' from StatefulSet '", obj.Name, "' in namespace '", obj.Namespace, "'.")
 			err := r.client.Update(context.TODO(), child)
 			if err != nil {
 				r.log.Error("Could not update '", child.GetName(), "': ", err)
@@ -778,6 +789,79 @@ func (r *ReconcileExtendedStatefulSet) handleDelete(extendedStatefulSet *essv1a1
 		}
 	}
 	return reconcile.Result{}, nil
+}
+
+// restartPods Restart scales ss to 0 and then back to its previous number of replicas
+func (r *ReconcileExtendedStatefulSet) restartPods(ctx context.Context, statefulSet *v1beta1.StatefulSet) error {
+	oldReplicas := *(statefulSet.Spec.Replicas)
+	var expectedReplicas int32
+	expectedReplicas = 0
+
+	ns, name := statefulSet.GetNamespace(), statefulSet.GetName()
+
+	// Restart scales to 0
+	// TODO encapsulate scale function
+	for i := 0; i < 3; i++ {
+		ss := &v1beta1.StatefulSet{}
+		key := types.NamespacedName{Namespace: ns, Name: name}
+		err := r.client.Get(ctx, key, ss)
+		if err != nil {
+			r.log.Errorf("failed to get statefulSet %q: %v", name, err)
+		}
+		*(ss.Spec.Replicas) = expectedReplicas
+		err = r.client.Update(ctx, statefulSet)
+		if err == nil {
+			return nil
+		}
+		if !kerrors.IsConflict(err) && !kerrors.IsServerTimeout(err) {
+			r.log.Errorf("failed to update statefulSet %q: %v", name, err)
+		}
+	}
+	r.log.Errorf("too many retries draining statefulSet %q", name)
+
+	//  waits for the ss.Status.Replicas to be equal to expectedReplicas
+	r.log.Debugf("Waiting for statefulset status.replicas updated to %d", expectedReplicas)
+
+	pollErr := wait.PollImmediate(StatefulSetPoll, StatefulSetTimeout,
+		func() (bool, error) {
+			ssGet := &v1beta1.StatefulSet{}
+			key := types.NamespacedName{Namespace: ns, Name: name}
+			err := r.client.Get(ctx, key, ssGet)
+			if err != nil {
+				return false, err
+			}
+			if *ssGet.Status.ObservedGeneration < statefulSet.Generation {
+				return false, nil
+			}
+			if ssGet.Status.Replicas != int32(expectedReplicas) {
+				r.log.Debugf("Waiting for statefulSet status.replicas to become %d, currently %d", expectedReplicas, ssGet.Status.Replicas)
+				return false, nil
+			}
+			return true, nil
+		})
+	if pollErr != nil {
+		r.log.Debugf("Failed waiting for statefulSet status.replicas updated to %d: %v", expectedReplicas, pollErr)
+	}
+
+	// Restart scales ss back to its previous number of replicas.
+	for i := 0; i < 3; i++ {
+		ss := &v1beta1.StatefulSet{}
+		key := types.NamespacedName{Namespace: ns, Name: name}
+		err := r.client.Get(ctx, key, ss)
+		if err != nil {
+			r.log.Errorf("failed to get statefulSet %q: %v", name, err)
+		}
+		*(ss.Spec.Replicas) = oldReplicas
+		err = r.client.Update(ctx, statefulSet)
+		if err == nil {
+			return nil
+		}
+		if !kerrors.IsConflict(err) && !kerrors.IsServerTimeout(err) {
+			r.log.Errorf("failed to update statefulSet %q: %v", name, err)
+		}
+	}
+	r.log.Errorf("too many retries draining statefulSet %q", name)
+	return errors.New("too many retries draining statefulSet")
 }
 
 // getOwnerReference constructs an OwnerReference pointing to the StatefulSet

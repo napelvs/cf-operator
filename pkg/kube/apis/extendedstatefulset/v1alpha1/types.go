@@ -25,7 +25,6 @@ var (
 	AnnotationConfigSHA1 = fmt.Sprintf("%s/configsha1", apis.GroupName)
 	// AnnotationVersion is the annotation key for the StatefulSet version
 	AnnotationVersion = fmt.Sprintf("%s/version", apis.GroupName)
-
 	// FinalizerString is the finalizer added to objects
 	FinalizerString = fmt.Sprintf("%s/finalizer", apis.GroupName)
 )
