@@ -143,11 +143,11 @@ var _ = Describe("ReconcileExtendedStatefulSet", func() {
 				}))
 
 				ess := &exss.ExtendedStatefulSet{}
-				err = client.Get(context.TODO(), types.NamespacedName{Name: "foo", Namespace: "default"}, ess)
+				err = client.Get(context.Background(), types.NamespacedName{Name: "foo", Namespace: "default"}, ess)
 				Expect(err).ToNot(HaveOccurred())
 
 				ss := &v1beta1.StatefulSet{}
-				err = client.Get(context.TODO(), types.NamespacedName{Name: "foo-v1", Namespace: "default"}, ss)
+				err = client.Get(context.Background(), types.NamespacedName{Name: "foo-v1", Namespace: "default"}, ss)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(metav1.IsControlledBy(ss, ess)).To(BeTrue())
@@ -155,12 +155,12 @@ var _ = Describe("ReconcileExtendedStatefulSet", func() {
 
 			It("updates existing statefulSet", func() {
 				ess := &exss.ExtendedStatefulSet{}
-				err := client.Get(context.TODO(), types.NamespacedName{Name: "foo", Namespace: "default"}, ess)
+				err := client.Get(context.Background(), types.NamespacedName{Name: "foo", Namespace: "default"}, ess)
 				Expect(err).ToNot(HaveOccurred())
 
 				// Provide statefulset and its pod from exStateful set
 				ss := v1StatefulSet
-				err = client.Create(context.TODO(), ss)
+				err = client.Create(context.Background(), ss)
 				Expect(err).ToNot(HaveOccurred())
 
 				pod := v1Pod
@@ -173,7 +173,7 @@ var _ = Describe("ReconcileExtendedStatefulSet", func() {
 					},
 				}
 
-				err = client.Create(context.TODO(), pod)
+				err = client.Create(context.Background(), pod)
 				Expect(err).ToNot(HaveOccurred())
 
 				// First reconcile creates new version because template has been update
@@ -182,7 +182,7 @@ var _ = Describe("ReconcileExtendedStatefulSet", func() {
 				Expect(result).To(Equal(reconcile.Result{}))
 
 				ss = &v1beta1.StatefulSet{}
-				err = client.Get(context.TODO(), types.NamespacedName{Name: "foo-v2", Namespace: "default"}, ss)
+				err = client.Get(context.Background(), types.NamespacedName{Name: "foo-v2", Namespace: "default"}, ss)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(metav1.IsControlledBy(ss, ess)).To(BeTrue())
@@ -197,7 +197,7 @@ var _ = Describe("ReconcileExtendedStatefulSet", func() {
 						},
 					},
 				}
-				err = client.Create(context.TODO(), pod)
+				err = client.Create(context.Background(), pod)
 				Expect(err).ToNot(HaveOccurred())
 
 				// Second reconcile deletes old version because new version is already available
@@ -205,7 +205,7 @@ var _ = Describe("ReconcileExtendedStatefulSet", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(result).To(Equal(reconcile.Result{}))
 
-				err = client.Get(context.TODO(), types.NamespacedName{Name: "foo-v1", Namespace: "default"}, ss)
+				err = client.Get(context.Background(), types.NamespacedName{Name: "foo-v1", Namespace: "default"}, ss)
 				Expect(err).To(HaveOccurred())
 				Expect(kerrors.IsNotFound(err)).To(BeTrue())
 			})
@@ -361,23 +361,23 @@ var _ = Describe("ReconcileExtendedStatefulSet", func() {
 				}))
 
 				ess := &exss.ExtendedStatefulSet{}
-				err = client.Get(context.TODO(), types.NamespacedName{Name: "foo", Namespace: "default"}, ess)
+				err = client.Get(context.Background(), types.NamespacedName{Name: "foo", Namespace: "default"}, ess)
 				Expect(err).ToNot(HaveOccurred())
 
 				ss := &v1beta1.StatefulSet{}
-				err = client.Get(context.TODO(), types.NamespacedName{Name: "foo-v1", Namespace: "default"}, ss)
+				err = client.Get(context.Background(), types.NamespacedName{Name: "foo-v1", Namespace: "default"}, ss)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(metav1.IsControlledBy(ss, ess)).To(BeTrue())
 
 				By("Adds OwnerReferences to all configurations", func() {
-					err = client.Get(context.TODO(), types.NamespacedName{Name: configMap1.Name, Namespace: "default"}, configMap1)
+					err = client.Get(context.Background(), types.NamespacedName{Name: configMap1.Name, Namespace: "default"}, configMap1)
 					Expect(err).ToNot(HaveOccurred())
-					err = client.Get(context.TODO(), types.NamespacedName{Name: configMap2.Name, Namespace: "default"}, configMap2)
+					err = client.Get(context.Background(), types.NamespacedName{Name: configMap2.Name, Namespace: "default"}, configMap2)
 					Expect(err).ToNot(HaveOccurred())
-					err = client.Get(context.TODO(), types.NamespacedName{Name: secret1.Name, Namespace: "default"}, secret1)
+					err = client.Get(context.Background(), types.NamespacedName{Name: secret1.Name, Namespace: "default"}, secret1)
 					Expect(err).ToNot(HaveOccurred())
-					err = client.Get(context.TODO(), types.NamespacedName{Name: secret2.Name, Namespace: "default"}, secret2)
+					err = client.Get(context.Background(), types.NamespacedName{Name: secret2.Name, Namespace: "default"}, secret2)
 					Expect(err).ToNot(HaveOccurred())
 
 					ownerRef := metav1.OwnerReference{
@@ -413,11 +413,11 @@ var _ = Describe("ReconcileExtendedStatefulSet", func() {
 					}))
 
 					ess := &exss.ExtendedStatefulSet{}
-					err = client.Get(context.TODO(), types.NamespacedName{Name: "foo", Namespace: "default"}, ess)
+					err = client.Get(context.Background(), types.NamespacedName{Name: "foo", Namespace: "default"}, ess)
 					Expect(err).ToNot(HaveOccurred())
 
 					ss := &v1beta1.StatefulSet{}
-					err = client.Get(context.TODO(), types.NamespacedName{Name: "foo-v1", Namespace: "default"}, ss)
+					err = client.Get(context.Background(), types.NamespacedName{Name: "foo-v1", Namespace: "default"}, ss)
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(metav1.IsControlledBy(ss, ess)).To(BeTrue())
@@ -427,7 +427,7 @@ var _ = Describe("ReconcileExtendedStatefulSet", func() {
 					// Remove "container2" which references Secret example2 and ConfigMap
 					containers := ss.Spec.Template.Spec.Containers
 					ess.Spec.Template.Spec.Template.Spec.Containers = []corev1.Container{containers[0]}
-					err = client.Update(context.TODO(), ess)
+					err = client.Update(context.Background(), ess)
 					Expect(err).ToNot(HaveOccurred())
 					result, err = reconciler.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
@@ -437,15 +437,15 @@ var _ = Describe("ReconcileExtendedStatefulSet", func() {
 					}))
 
 					ss = &v1beta1.StatefulSet{}
-					err = client.Get(context.TODO(), types.NamespacedName{Name: "foo-v2", Namespace: "default"}, ss)
+					err = client.Get(context.Background(), types.NamespacedName{Name: "foo-v2", Namespace: "default"}, ss)
 					Expect(err).ToNot(HaveOccurred())
 
 					currentSHA1 := ss.GetAnnotations()[exss.AnnotationConfigSHA1]
 
 					By("Removes the OwnerReference from the orphaned configurations", func() {
-						err = client.Get(context.TODO(), types.NamespacedName{Name: configMap1.Name, Namespace: "default"}, configMap1)
+						err = client.Get(context.Background(), types.NamespacedName{Name: configMap1.Name, Namespace: "default"}, configMap1)
 						Expect(err).ToNot(HaveOccurred())
-						err = client.Get(context.TODO(), types.NamespacedName{Name: secret1.Name, Namespace: "default"}, secret1)
+						err = client.Get(context.Background(), types.NamespacedName{Name: secret1.Name, Namespace: "default"}, secret1)
 						Expect(err).ToNot(HaveOccurred())
 
 						ownerRef := metav1.OwnerReference{
@@ -478,22 +478,22 @@ var _ = Describe("ReconcileExtendedStatefulSet", func() {
 					}))
 
 					ess := &exss.ExtendedStatefulSet{}
-					err = client.Get(context.TODO(), types.NamespacedName{Name: "foo", Namespace: "default"}, ess)
+					err = client.Get(context.Background(), types.NamespacedName{Name: "foo", Namespace: "default"}, ess)
 					Expect(err).ToNot(HaveOccurred())
 
 					ss := &v1beta1.StatefulSet{}
-					err = client.Get(context.TODO(), types.NamespacedName{Name: "foo-v1", Namespace: "default"}, ss)
+					err = client.Get(context.Background(), types.NamespacedName{Name: "foo-v1", Namespace: "default"}, ss)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(metav1.IsControlledBy(ss, ess)).To(BeTrue())
 
 					originalSHA1 := ss.GetAnnotations()[exss.AnnotationConfigSHA1]
 
 					// Update "configMap1"
-					err = client.Get(context.TODO(), types.NamespacedName{Name: configMap1.Name, Namespace: "default"}, configMap1)
+					err = client.Get(context.Background(), types.NamespacedName{Name: configMap1.Name, Namespace: "default"}, configMap1)
 					Expect(err).ToNot(HaveOccurred())
 
 					configMap1.Data["key1"] = "modified"
-					err = client.Update(context.TODO(), configMap1)
+					err = client.Update(context.Background(), configMap1)
 					Expect(err).ToNot(HaveOccurred())
 					result, err = reconciler.Reconcile(request)
 					Expect(err).ToNot(HaveOccurred())
@@ -503,19 +503,19 @@ var _ = Describe("ReconcileExtendedStatefulSet", func() {
 					}))
 
 					ss = &v1beta1.StatefulSet{}
-					err = client.Get(context.TODO(), types.NamespacedName{Name: "foo-v1", Namespace: "default"}, ss)
+					err = client.Get(context.Background(), types.NamespacedName{Name: "foo-v1", Namespace: "default"}, ss)
 					Expect(err).ToNot(HaveOccurred())
 
 					currentSHA1 := ss.GetAnnotations()[exss.AnnotationConfigSHA1]
 
 					By("Adds OwnerReferences to all configurations", func() {
-						err = client.Get(context.TODO(), types.NamespacedName{Name: configMap1.Name, Namespace: "default"}, configMap1)
+						err = client.Get(context.Background(), types.NamespacedName{Name: configMap1.Name, Namespace: "default"}, configMap1)
 						Expect(err).ToNot(HaveOccurred())
-						err = client.Get(context.TODO(), types.NamespacedName{Name: configMap2.Name, Namespace: "default"}, configMap2)
+						err = client.Get(context.Background(), types.NamespacedName{Name: configMap2.Name, Namespace: "default"}, configMap2)
 						Expect(err).ToNot(HaveOccurred())
-						err = client.Get(context.TODO(), types.NamespacedName{Name: secret1.Name, Namespace: "default"}, secret1)
+						err = client.Get(context.Background(), types.NamespacedName{Name: secret1.Name, Namespace: "default"}, secret1)
 						Expect(err).ToNot(HaveOccurred())
-						err = client.Get(context.TODO(), types.NamespacedName{Name: secret2.Name, Namespace: "default"}, secret2)
+						err = client.Get(context.Background(), types.NamespacedName{Name: secret2.Name, Namespace: "default"}, secret2)
 						Expect(err).ToNot(HaveOccurred())
 
 						ownerRef := metav1.OwnerReference{
@@ -740,7 +740,7 @@ var _ = Describe("ReconcileExtendedStatefulSet", func() {
 						},
 					},
 				}
-				err := client.Update(context.TODO(), v2Pod)
+				err := client.Update(context.Background(), v2Pod)
 				Expect(err).ToNot(HaveOccurred())
 
 				v3Pod.Status = corev1.PodStatus{
@@ -751,7 +751,7 @@ var _ = Describe("ReconcileExtendedStatefulSet", func() {
 						},
 					},
 				}
-				err = client.Update(context.TODO(), v3Pod)
+				err = client.Update(context.Background(), v3Pod)
 				Expect(err).ToNot(HaveOccurred())
 
 				result, err := reconciler.Reconcile(request)
@@ -759,19 +759,19 @@ var _ = Describe("ReconcileExtendedStatefulSet", func() {
 				Expect(result).To(Equal(reconcile.Result{}))
 
 				ess := &exss.ExtendedStatefulSet{}
-				err = client.Get(context.TODO(), types.NamespacedName{Name: "foo", Namespace: "default"}, ess)
+				err = client.Get(context.Background(), types.NamespacedName{Name: "foo", Namespace: "default"}, ess)
 				Expect(err).ToNot(HaveOccurred())
 
 				ss := &v1beta1.StatefulSet{}
-				err = client.Get(context.TODO(), types.NamespacedName{Name: "foo-v1", Namespace: "default"}, ss)
+				err = client.Get(context.Background(), types.NamespacedName{Name: "foo-v1", Namespace: "default"}, ss)
 				Expect(err).To(HaveOccurred())
 				Expect(kerrors.IsNotFound(err)).To(BeTrue())
 
-				err = client.Get(context.TODO(), types.NamespacedName{Name: "foo-v2", Namespace: "default"}, ss)
+				err = client.Get(context.Background(), types.NamespacedName{Name: "foo-v2", Namespace: "default"}, ss)
 				Expect(err).To(HaveOccurred())
 				Expect(kerrors.IsNotFound(err)).To(BeTrue())
 
-				err = client.Get(context.TODO(), types.NamespacedName{Name: "foo-v3", Namespace: "default"}, ss)
+				err = client.Get(context.Background(), types.NamespacedName{Name: "foo-v3", Namespace: "default"}, ss)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(metav1.IsControlledBy(ss, ess)).To(BeTrue())
@@ -786,7 +786,7 @@ var _ = Describe("ReconcileExtendedStatefulSet", func() {
 						},
 					},
 				}
-				err := client.Update(context.TODO(), v2Pod)
+				err := client.Update(context.Background(), v2Pod)
 				Expect(err).ToNot(HaveOccurred())
 
 				result, err := reconciler.Reconcile(request)
@@ -797,20 +797,20 @@ var _ = Describe("ReconcileExtendedStatefulSet", func() {
 				}))
 
 				ess := &exss.ExtendedStatefulSet{}
-				err = client.Get(context.TODO(), types.NamespacedName{Name: "foo", Namespace: "default"}, ess)
+				err = client.Get(context.Background(), types.NamespacedName{Name: "foo", Namespace: "default"}, ess)
 				Expect(err).ToNot(HaveOccurred())
 
 				ss := &v1beta1.StatefulSet{}
-				err = client.Get(context.TODO(), types.NamespacedName{Name: "foo-v1", Namespace: "default"}, ss)
+				err = client.Get(context.Background(), types.NamespacedName{Name: "foo-v1", Namespace: "default"}, ss)
 				Expect(err).To(HaveOccurred())
 				Expect(kerrors.IsNotFound(err)).To(BeTrue())
 
-				err = client.Get(context.TODO(), types.NamespacedName{Name: "foo-v2", Namespace: "default"}, ss)
+				err = client.Get(context.Background(), types.NamespacedName{Name: "foo-v2", Namespace: "default"}, ss)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(metav1.IsControlledBy(ss, ess)).To(BeTrue())
 
-				err = client.Get(context.TODO(), types.NamespacedName{Name: "foo-v3", Namespace: "default"}, ss)
+				err = client.Get(context.Background(), types.NamespacedName{Name: "foo-v3", Namespace: "default"}, ss)
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(metav1.IsControlledBy(ss, ess)).To(BeTrue())
@@ -825,19 +825,19 @@ var _ = Describe("ReconcileExtendedStatefulSet", func() {
 				}))
 
 				ess := &exss.ExtendedStatefulSet{}
-				err = client.Get(context.TODO(), types.NamespacedName{Name: "foo", Namespace: "default"}, ess)
+				err = client.Get(context.Background(), types.NamespacedName{Name: "foo", Namespace: "default"}, ess)
 				Expect(err).ToNot(HaveOccurred())
 
 				ss := &v1beta1.StatefulSet{}
-				err = client.Get(context.TODO(), types.NamespacedName{Name: "foo-v1", Namespace: "default"}, ss)
+				err = client.Get(context.Background(), types.NamespacedName{Name: "foo-v1", Namespace: "default"}, ss)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(metav1.IsControlledBy(ss, ess)).To(BeTrue())
 
-				err = client.Get(context.TODO(), types.NamespacedName{Name: "foo-v2", Namespace: "default"}, ss)
+				err = client.Get(context.Background(), types.NamespacedName{Name: "foo-v2", Namespace: "default"}, ss)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(metav1.IsControlledBy(ss, ess)).To(BeTrue())
 
-				err = client.Get(context.TODO(), types.NamespacedName{Name: "foo-v3", Namespace: "default"}, ss)
+				err = client.Get(context.Background(), types.NamespacedName{Name: "foo-v3", Namespace: "default"}, ss)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(metav1.IsControlledBy(ss, ess)).To(BeTrue())
 			})
